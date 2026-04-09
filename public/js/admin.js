@@ -6,14 +6,14 @@ async function checkAdminAccess() {
     const result = await response.json();
 
     if (!result.isAdmin) {
-      window.location.href = "/direct_login.html";
+      window.location.href = "/direct_login";
       return false;
     }
 
     return true;
   } catch (error) {
     console.error("Failed to verify admin session:", error);
-    window.location.href = "/direct_login.html";
+    window.location.href = "/direct_login";
     return false;
   }
 }
@@ -462,7 +462,7 @@ function setupLogout() {
         method: "POST",
       });
 
-      window.location.href = "/direct_login.html";
+      window.location.href = "/direct_login";
     } catch (error) {
       console.error("Logout failed:", error);
     }

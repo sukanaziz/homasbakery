@@ -77,6 +77,34 @@ app.use("/api/contacts", contactRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/index.html"));
+});
+
+app.get("/menu", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/menu.html"));
+});
+
+app.get("/contact", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/contact.html"));
+});
+
+app.get("/order", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/order.html"));
+});
+
+app.get("/direct_login", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/direct_login.html"));
+});
+
+app.get("/privacy", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/privacy.html"));
+});
+
+app.get("/order-policy", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/order_policy.html"));
+});
+
 
 app.get("/api", (req, res) => {
   res.json({ message: "Homas Bakery backend is running!" });
@@ -85,7 +113,7 @@ app.get("/api", (req, res) => {
 // Middleware to protect admin-only pages
 function requireAdminPage(req, res, next) {
   if (!req.session.isAdmin) {
-    return res.redirect("/admin-login.html");
+    return res.redirect("/direct_login");
   }
 
   next();
