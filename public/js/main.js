@@ -1,0 +1,1 @@
+console.log("Homas Bakery frontend loaded.");

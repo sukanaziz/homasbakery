@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Request | Homa's Bakery</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a href="/" class="logo">Homa's Bakery</a>
+      <ul class="nav-links">
+        <li><a href="/menu.html">Menu</a></li>
+        <li><a href="/contact.html">Contact</a></li>
+        <li><a href="/order.html" class="active">Order Request</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="order-page">
+    <section class="order-hero">
+      <h1>Order Request</h1>
+      <p>
+        Planning a gathering, event, or special occasion? Add one or more items
+        below and submit your order request.
+      </p>
+    </section>
+
+    <section class="order-form-wrapper">
+      <form id="order-form" class="order-form">
+        <h2>Customer Information</h2>
+
+        <label for="customer_name">Full Name</label>
+        <input
+          type="text"
+          id="customer_name"
+          name="customer_name"
+          autocomplete="name"
+          required
+        />
+
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          autocomplete="email"
+          required
+        />
+
+        <label for="phone">Phone</label>
+        <input
+          type="tel"
+          id="phone"
+          name="phone"
+          autocomplete="tel"
+          required
+        />
+
+        <label for="pickup_date">Pickup / Delivery Date</label>
+        <input
+          type="date"
+          id="pickup_date"
+          name="pickup_date"
+          required
+        />
+
+        <label for="fulfillment_type">Order Type</label>
+        <select id="fulfillment_type" name="fulfillment_type" required>
+          <option value="">Select an option</option>
+          <option value="pickup">Pickup</option>
+          <option value="delivery">Delivery</option>
+        </select>
+
+        <div id="delivery-fields" class="delivery-fields hidden">
+          <div class="delivery-fields-inner">
+            <label for="delivery_street">Street Address</label>
+            <input
+              type="text"
+              id="delivery_street"
+              name="delivery_street"
+              autocomplete="address-line1"
+            />
+
+            <label for="delivery_apt">Apartment / Suite (Optional)</label>
+            <input
+              type="text"
+              id="delivery_apt"
+              name="delivery_apt"
+              placeholder="Apt #"
+              autocomplete="address-line2"
+            />
+
+            <div class="address-grid">
+              <div class="address-field">
+                <label for="delivery_city">City</label>
+                <input
+                  type="text"
+                  id="delivery_city"
+                  name="delivery_city"
+                  autocomplete="address-level2"
+                />
+              </div>
+
+              <div class="address-field address-field-state">
+                <label for="delivery_state">State</label>
+                <input
+                  type="text"
+                  id="delivery_state"
+                  name="delivery_state"
+                  maxlength="2"
+                  placeholder="CA"
+                  autocomplete="address-level1"
+                />
+              </div>
+
+              <div class="address-field address-field-zip">
+                <label for="delivery_postal_code">Postal Code</label>
+                <input
+                  type="text"
+                  id="delivery_postal_code"
+                  name="delivery_postal_code"
+                  autocomplete="postal-code"
+                />
+              </div>
+            </div>
+
+            <p class="delivery-note">
+              Please note: Delivery orders include an additional delivery fee.
+              We currently offer delivery within a 50-mile radius of Hayward, CA.
+              Orders outside this range will require customer pickup.
+            </p>
+          </div>
+        </div>
+
+        <h2>Order Items</h2>
+
+        <p class="order-helper-text">
+          Add each item you would like included in your order request. You can
+          add multiple menu items before submitting.
+        </p>
+
+        <div class="order-item-builder">
+          <label for="product_name">Select Item</label>
+          <select id="product_name" name="product_name">
+            <option value="">Choose a menu item</option>
+          </select>
+
+          <label for="item_quantity">Quantity</label>
+          <input
+            type="number"
+            id="item_quantity"
+            name="item_quantity"
+            min="1"
+            value="1"
+          />
+
+          <button type="button" id="add-item-button" class="btn">
+            Add Item
+          </button>
+        </div>
+
+        <div class="order-items-section">
+          <h3>Selected Items</h3>
+          <div id="order-items-list" class="order-items-list">
+            <p class="empty-items-message">No items added yet.</p>
+          </div>
+        </div>
+
+        <label for="special_instructions">Special Instructions</label>
+        <textarea
+          id="special_instructions"
+          name="special_instructions"
+          rows="5"
+          placeholder="Event details, decorations, notes, etc..."
+        ></textarea>
+
+        <div class="order-policy">
+          <p>
+            Please note: All custom orders require a 50% non-refundable prepayment
+            once confirmed. After submitting your request, we will contact you by
+            phone and/or email to confirm your order details, availability,
+            pickup address (if pickup is selected), and final pricing.
+          </p>
+
+          <label class="policy-checkbox" for="agree_policy">
+            <input
+              type="checkbox"
+              id="agree_policy"
+              name="agree_policy"
+              required
+            />
+            I understand that confirmed custom orders require a 50%
+            non-refundable deposit, and that final confirmation and other order
+            details will be provided by phone and/or email.
+          </label>
+        </div>
+
+        <button type="submit" id="submit-order-btn" class="btn" disabled>
+          Submit Order Request
+        </button>
+
+        <p id="order-status" class="form-status" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-column">
+        <h4>Homa's Bakery</h4>
+        <p>
+          Fresh bakery favorites made with care, tradition, and family warmth.
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <p>
+        <a href="/privacy.html">Privacy Policy</a> |
+        <a href="/order_policy.html">Order Policy</a>
+      </p>
+    </div>
+
+    <p class="footer-bottom">&copy; 2026 Homa's Bakery. All rights reserved.</p>
+  </footer>
+
+  <script src="/js/order.js"></script>
+</body>
+</html>

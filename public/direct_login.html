@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login | Homa's Bakery</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="navbar">
+      <a href="/" class="logo">Homa's Bakery</a>
+      <ul class="nav-links">
+        <li><a href="/menu.html">Menu</a></li>
+        <li><a href="/contact.html">Contact</a></li>
+        <li><a href="/order.html">Order Request</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="login-page">
+    <section class="login-card">
+      <h1>Admin Login</h1>
+      <p>Sign in to access the bakery dashboard.</p>
+
+      <form id="login-form" class="login-form">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          autocomplete="username"
+          required
+        />
+
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          autocomplete="current-password"
+          required
+        />
+
+        <button type="submit" class="btn">Log In</button>
+
+        <p id="login-status" class="form-status" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-column">
+        <h4>Homa's Bakery</h4>
+        <p>Fresh bakery favorites made with care, tradition, and family warmth.</p>
+      </div>
+    </div>
+
+    <div>
+      <p>
+        <a href="/privacy.html">Privacy Policy</a> |
+        <a href="/order_policy.html">Order Policy</a>
+      </p>
+    </div>
+
+    <p class="footer-bottom">&copy; 2026 Homa's Bakery. All rights reserved.</p>
+  </footer>
+
+  <script src="/js/admin-login.js"></script>
+</body>
+</html>
