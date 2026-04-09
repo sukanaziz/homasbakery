@@ -7,7 +7,12 @@ const path = require("path");
 const fs = require("fs");
 
 // Define the directory where uploaded product images will be stored
-const uploadDir = path.join(__dirname, "../../public/uploads");
+const uploadBaseDir =
+  process.env.NODE_ENV === "production"
+    ? "/var/data/uploads"
+    : path.join(__dirname, "../../public/uploads");
+
+const uploadDir = uploadBaseDir;
 
 // Ensure the upload directory exists
 fs.mkdirSync(uploadDir, { recursive: true });

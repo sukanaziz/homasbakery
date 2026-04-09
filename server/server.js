@@ -30,6 +30,13 @@ const authRoutes = require("./routes/auth");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const uploadsDir =
+  process.env.NODE_ENV === "production"
+    ? "/var/data/uploads"
+    : path.join(__dirname, "../public/uploads");
+
+app.use("/uploads", express.static(uploadsDir));
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
