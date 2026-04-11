@@ -1,14 +1,20 @@
-// Import Express and create a router for order-related routes
+// Import Express and create a router for order routes
 const express = require("express");
 const router = express.Router();
 
 // Import shared database connection
 const db = require("../db");
 
+// Import email helpers
+const {
+  sendOrderToBakery,
+  sendOrderToCustomer,
+} = require("../utils/mailer");
 
-// Validates request data, creates order + order items using a transaction
-router.post("/", (req, res) => {
-  // Extract request body fields
+
+//Validate request data, create order and order items using a transaction,
+//then send confirmation emails after a successful commit
+router.post("/", async(req, res) => {
   const {
     customer_name,
     email,
@@ -24,19 +30,38 @@ router.post("/", (req, res) => {
     items,
   } = req.body;
 
-  // Trim key fields for safe validation
+  // Trim key fields for safer validation and cleaner storage
   const trimmedName = customer_name?.trim();
   const trimmedEmail = email?.trim();
   const trimmedPhone = phone?.trim();
+  const trimmedStreet = delivery_street?.trim() || "";
+  const trimmedApt = delivery_apt?.trim() || "";
+  const trimmedCity = delivery_city?.trim() || "";
+  const trimmedState = delivery_state?.trim() || "";
+  const trimmedPostalCode = delivery_postal_code?.trim() || "";
+  const trimmedInstructions = special_instructions?.trim() || "";
 
   // Validate required customer info
-  if (!trimmedName || !trimmedEmail || !trimmedPhone || !pickup_date || !fulfillment_type) {
+  if (
+    !trimmedName ||
+    !trimmedEmail ||
+    !trimmedPhone ||
+    !pickup_date ||
+    !fulfillment_type
+  ) {
     return res.status(400).json({
       error: "Please fill in all required customer details.",
     });
   }
 
-  // Ensure fulfillment type is valid
+  // Email validation
+  if (!trimmedEmail.includes("@") || !trimmedEmail.includes(".")) {
+    return res.status(400).json({
+      error: "Please enter a valid email address.",
+    });
+  }
+
+  // Ensure fulfillment type
   if (!["pickup", "delivery"].includes(fulfillment_type)) {
     return res.status(400).json({
       error: "Invalid fulfillment type.",
@@ -50,14 +75,9 @@ router.post("/", (req, res) => {
     });
   }
 
-  // If delivery is selected, ensure full address is provided
+  // If delivery is selected, require full address
   if (fulfillment_type === "delivery") {
-    if (
-      !delivery_street?.trim() ||
-      !delivery_city?.trim() ||
-      !delivery_state?.trim() ||
-      !delivery_postal_code?.trim()
-    ) {
+    if (!trimmedStreet || !trimmedCity || !trimmedState || !trimmedPostalCode) {
       return res.status(400).json({
         error: "Please complete the full delivery address.",
       });
@@ -80,7 +100,6 @@ router.post("/", (req, res) => {
     }
   }
 
-  // Main order insert query
   const orderQuery = `
     INSERT INTO orders (
       customer_name,
@@ -98,38 +117,33 @@ router.post("/", (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  // Order items insert query
   const itemQuery = `
     INSERT INTO order_items (order_id, product_name, quantity, price)
     VALUES (?, ?, ?, ?)
   `;
 
-  // Prepare values for order insert
   const orderValues = [
     trimmedName,
     trimmedEmail,
     trimmedPhone,
     pickup_date,
     fulfillment_type,
-    delivery_street?.trim() || "",
-    delivery_apt?.trim() || "",
-    delivery_city?.trim() || "",
-    delivery_state?.trim() || "",
-    delivery_postal_code?.trim() || "",
-    special_instructions?.trim() || "",
+    trimmedStreet,
+    trimmedApt,
+    trimmedCity,
+    trimmedState,
+    trimmedPostalCode,
+    trimmedInstructions,
   ];
 
-  // Serialize ensures queries run in order
+  //Transaction
   db.serialize(() => {
-    // Start transaction
     db.run("BEGIN TRANSACTION");
 
-    // Insert main order
     db.run(orderQuery, orderValues, function (orderErr) {
       if (orderErr) {
         console.error("Failed to save order:", orderErr.message);
 
-        // Rollback if order fails
         return db.run("ROLLBACK", () => {
           res.status(500).json({
             error: "Failed to submit order.",
@@ -137,16 +151,12 @@ router.post("/", (req, res) => {
         });
       }
 
-      // Get newly created order ID
       const orderId = this.lastID;
-
-      // Prepare statement for inserting items
       const stmt = db.prepare(itemQuery);
 
-      let insertFailed = false; // Track item insert failures
-      let pendingItems = items.length; // Track remaining inserts
+      let insertFailed = false;
+      let pendingItems = items.length;
 
-      // Insert each order item
       for (const item of items) {
         stmt.run(
           orderId,
@@ -159,14 +169,10 @@ router.post("/", (req, res) => {
               console.error("Failed to save order item:", itemErr.message);
             }
 
-            // Decrease pending counter
             pendingItems--;
 
-            // When all items processed
             if (pendingItems === 0) {
-              // Finalize statement
               stmt.finalize((finalizeErr) => {
-                // If any item failed OR finalize failed → rollback
                 if (insertFailed || finalizeErr) {
                   console.error(
                     "Failed to finalize order items:",
@@ -180,7 +186,6 @@ router.post("/", (req, res) => {
                   });
                 }
 
-                // Commit transaction if everything succeeded
                 db.run("COMMIT", (commitErr) => {
                   if (commitErr) {
                     console.error("Failed to commit:", commitErr.message);
@@ -192,11 +197,40 @@ router.post("/", (req, res) => {
                     });
                   }
 
-                  // Success response
+                  // Send success response first so email issues do not block the order
                   res.status(201).json({
                     message: "Custom order submitted successfully.",
                     orderId,
                   });
+
+                  // Send emails after commit and response
+                  (async () => {
+                    try {
+                      await sendOrderToBakery(
+                        {
+                          customer_name: trimmedName,
+                          email: trimmedEmail,
+                          phone: trimmedPhone,
+                          pickup_date,
+                          fulfillment_type,
+                          delivery_street: trimmedStreet,
+                          delivery_apt: trimmedApt,
+                          delivery_city: trimmedCity,
+                          delivery_state: trimmedState,
+                          delivery_postal_code: trimmedPostalCode,
+                          special_instructions: trimmedInstructions,
+                        },
+                        items
+                      );
+
+                      await sendOrderToCustomer({
+                        customer_name: trimmedName,
+                        email: trimmedEmail,
+                      });
+                    } catch (emailErr) {
+                      console.error("Order email error:", emailErr.message);
+                    }
+                  })();
                 });
               });
             }
@@ -207,5 +241,4 @@ router.post("/", (req, res) => {
   });
 });
 
-// Export router
 module.exports = router;

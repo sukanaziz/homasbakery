@@ -5,8 +5,13 @@ const router = express.Router();
 // Import the shared SQLite database connection
 const db = require("../db");
 
-//Validate and store a contact form submission
-router.post("/", (req, res) => {
+// Import email function
+const { sendContactToBakery } = require("../utils/mailer");
+
+
+//Validate and store a contact form submission,
+//then send email notification to bakery
+router.post("/", async (req, res) => {
   const { name, email, phone, message } = req.body;
 
   // Trim input values for cleaner validation and storage
@@ -15,47 +20,47 @@ router.post("/", (req, res) => {
   const trimmedPhone = phone?.trim() || "";
   const trimmedMessage = message?.trim();
 
-  // Validate required fields
+  // Required fields
   if (!trimmedName || !trimmedEmail || !trimmedMessage) {
     return res.status(400).json({
       error: "Name, email, and message are required.",
     });
   }
 
-  // Validate name length
+  // Name length
   if (trimmedName.length < 2) {
     return res.status(400).json({
       error: "Please enter a valid name.",
     });
   }
 
-  // Email validation
+  // Email format
   if (!trimmedEmail.includes("@") || !trimmedEmail.includes(".")) {
     return res.status(400).json({
       error: "Please enter a valid email address.",
     });
   }
 
-  // Validate message length
-  if (trimmedMessage.length < 10) {
+  // Message length min
+  if (trimmedMessage.length < 5) {
     return res.status(400).json({
-      error: "Message must be at least 10 characters long.",
+      error: "Message must be at least 5 characters long.",
     });
   }
 
-  // Limit message length
-  if (trimmedMessage.length > 1000) {
+  // Message length max
+  if (trimmedMessage.length > 200) {
     return res.status(400).json({
-      error: "Message must be under 1000 characters.",
+      error: "Message must be under 200 characters.",
     });
   }
 
+  //Insert into database
   const query = `
     INSERT INTO contacts (name, email, phone, message)
     VALUES (?, ?, ?, ?)
   `;
 
-  // Save values to the database
   db.run(
     query,
     [trimmedName, trimmedEmail, trimmedPhone, trimmedMessage],
@@ -67,10 +72,24 @@ router.post("/", (req, res) => {
         });
       }
 
+      // Send success response FIRST
       res.status(201).json({
         message: "Contact message submitted successfully.",
         contactId: this.lastID,
       });
+      //Send Email
+      (async () => {
+        try {
+          await sendContactToBakery({
+            name: trimmedName,
+            email: trimmedEmail,
+            phone: trimmedPhone,
+            message: trimmedMessage,
+          });
+        } catch (emailErr) {
+          console.error("Contact email error:", emailErr.message);
+        }
+      })();
     }
   );
 });
