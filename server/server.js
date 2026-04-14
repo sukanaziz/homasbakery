@@ -101,7 +101,7 @@ app.get("/privacy", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/privacy.html"));
 });
 
-app.get("/order-policy", (req, res) => {
+app.get("/order_policy", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/order_policy.html"));
 });
 

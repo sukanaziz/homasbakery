@@ -7,15 +7,15 @@ const path = require("path");
 const fs = require("fs");
 
 // Define the directory where uploaded product images will be stored
-const uploadBaseDir =
+const uploadDir =
   process.env.NODE_ENV === "production"
     ? "/var/data/uploads"
     : path.join(__dirname, "../../public/uploads");
 
-const uploadDir = uploadBaseDir;
-
-// Ensure the upload directory exists
-fs.mkdirSync(uploadDir, { recursive: true });
+// Create folder if it doesn't exist
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Configure how uploaded files are stored on disk
 const storage = multer.diskStorage({
@@ -159,7 +159,13 @@ router.post("/", upload.single("imageFile"), (req, res) => {
 
   db.run(
     query,
-    [trimmedName, trimmedCategory, trimmedDescription, numericPrice, imagePath],
+    [
+      trimmedName,
+      trimmedCategory,
+      trimmedDescription,
+      numericPrice,
+      imagePath,
+    ],
     function (err) {
       if (err) {
         console.error("Failed to add product:", err.message);
@@ -228,69 +234,80 @@ router.put("/:id", upload.single("imageFile"), (req, res) => {
   }
 
   // Look up the current product first
-  db.get(`SELECT * FROM products WHERE id = ?`, [id], (findErr, existingProduct) => {
-    if (findErr) {
-      console.error("Failed to find product:", findErr.message);
+  db.get(
+    `SELECT * FROM products WHERE id = ?`,
+    [id],
+    (findErr, existingProduct) => {
+      if (findErr) {
+        console.error("Failed to find product:", findErr.message);
 
-      if (req.file) deleteImageFile(req.file.filename);
+        if (req.file) deleteImageFile(req.file.filename);
 
-      return res.status(500).json({
-        error: "Failed to load product.",
-      });
-    }
-
-    if (!existingProduct) {
-      if (req.file) deleteImageFile(req.file.filename);
-
-      return res.status(404).json({
-        error: "Product not found.",
-      });
-    }
-
-    const imagePath = req.file
-      ? `uploads/${req.file.filename}`
-      : existingProduct.image;
-
-    const query = `
-      UPDATE products
-      SET name = ?, category = ?, description = ?, price = ?, image = ?
-      WHERE id = ?
-    `;
-
-    db.run(
-      query,
-      [trimmedName, trimmedCategory, trimmedDescription, numericPrice, imagePath, id],
-      function (err) {
-        if (err) {
-          console.error("Failed to update product:", err.message);
-
-          // Remove newly uploaded image if update fails
-          if (req.file) deleteImageFile(req.file.filename);
-
-          return res.status(500).json({
-            error: "Failed to update product.",
-          });
-        }
-
-        if (this.changes === 0) {
-          if (req.file) deleteImageFile(req.file.filename);
-
-          return res.status(404).json({
-            error: "Product not found.",
-          });
-        }
-
-        // Delete old image only after successful update
-        if (req.file && existingProduct.image) {
-          deleteImageFile(existingProduct.image);
-        }
-
-        res.json({
-          message: "Product updated successfully.",
+        return res.status(500).json({
+          error: "Failed to load product.",
         });
       }
-    );
-  });
+
+      if (!existingProduct) {
+        if (req.file) deleteImageFile(req.file.filename);
+
+        return res.status(404).json({
+          error: "Product not found.",
+        });
+      }
+
+      const imagePath = req.file
+        ? `uploads/${req.file.filename}`
+        : existingProduct.image;
+
+      const query = `
+        UPDATE products
+        SET name = ?, category = ?, description = ?, price = ?, image = ?
+        WHERE id = ?
+      `;
+
+      db.run(
+        query,
+        [
+          trimmedName,
+          trimmedCategory,
+          trimmedDescription,
+          numericPrice,
+          imagePath,
+          id,
+        ],
+        function (err) {
+          if (err) {
+            console.error("Failed to update product:", err.message);
+
+            // Remove newly uploaded image if update fails
+            if (req.file) deleteImageFile(req.file.filename);
+
+            return res.status(500).json({
+              error: "Failed to update product.",
+            });
+          }
+
+          if (this.changes === 0) {
+            if (req.file) deleteImageFile(req.file.filename);
+
+            return res.status(404).json({
+              error: "Product not found.",
+            });
+          }
+
+          // Delete old image only after successful update
+          if (req.file && existingProduct.image) {
+            deleteImageFile(existingProduct.image);
+          }
+
+          res.json({
+            message: "Product updated successfully.",
+          });
+        }
+      );
+    }
+  );
 });
 
 // Admin route: delete a product and its stored image if present
