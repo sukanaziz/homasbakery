@@ -20,8 +20,6 @@ const contactLimiter=rateLimit({
     error:"Too many messages. Please wait before trying again. "
   }
 })
-app.use("/api/orders",orderLimiter)
-app.use("/api/contacts",contactLimiter)
 
 if (!process.env.SESSION_SECRET) {
   throw new Error("SESSION_SECRET is missing from .env");
@@ -59,6 +57,9 @@ app.use("/uploads", express.static(uploadsDir));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/api/orders",orderLimiter)
+app.use("/api/contacts",contactLimiter)
+
 
 const sessionDbDir =
   process.env.NODE_ENV === "production"
