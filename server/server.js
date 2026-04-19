@@ -4,6 +4,25 @@
 
 require("dotenv").config();
 
+const rateLimit=require("express-rate-limit");
+
+const orderLimiter=rateLimit({
+  windowMs:10*60*1000,
+  max:5,
+  message:{
+    error:"Too many order requests. Please wait before trying again. "
+  }
+})
+const contactLimiter=rateLimit({
+  windowMs:10*60*1000, //10 min 
+  max:5, //5 orders per ip
+  message:{
+    error:"Too many messages. Please wait before trying again. "
+  }
+})
+app.use("/api/orders",orderLimiter)
+app.use("/api/contacts",contactLimiter)
+
 if (!process.env.SESSION_SECRET) {
   throw new Error("SESSION_SECRET is missing from .env");
 }
