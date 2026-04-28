@@ -1,3 +1,14 @@
+// Escape HTML so values rendered via innerHTML can't inject markup.
+function escapeHtml(value) {
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // Fetch all products from the backend and render them
 // into grouped menu sections by category.
 async function loadProducts() {
@@ -74,17 +85,17 @@ async function loadProducts() {
         card.innerHTML = `
           <div class="product-image-wrapper">
             <img
-              src="${imagePath}"
-              alt="${product.name}"
+              src="${escapeHtml(imagePath)}"
+              alt="${escapeHtml(product.name)}"
               class="product-image"
               onerror="this.src='images/placeholder-bakery.jpg'"
             />
           </div>
 
           <div class="product-info">
-            <span class="product-category">${product.category}</span>
-            <h3 class="product-name">${product.name}</h3>
-            <p class="product-description">${product.description}</p>
+            <span class="product-category">${escapeHtml(product.category)}</span>
+            <h3 class="product-name">${escapeHtml(product.name)}</h3>
+            <p class="product-description">${escapeHtml(product.description)}</p>
             <p class="product-price">$${Number(product.price).toFixed(2)}</p>
           </div>
         `;

@@ -25,6 +25,9 @@ const db = new sqlite3.Database(dbPath, (err) => {
   }
 });
 
+// Enforce foreign key constraints (off by default in SQLite)
+db.run("PRAGMA foreign_keys = ON;");
+
 
 db.serialize(() => {
   // Products table

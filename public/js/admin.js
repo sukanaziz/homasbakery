@@ -1,3 +1,15 @@
+// Escape HTML so user-supplied values can't inject markup or scripts
+// when rendered into the DOM via innerHTML.
+function escapeHtml(value) {
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // Verify whether the user has an active admin session.
 // If user does not then redirect them to the admin login page.
 async function checkAdminAccess() {
@@ -82,25 +94,25 @@ async function loadProducts() {
       const row = document.createElement("tr");
 
       const imagePreview = product.image
-        ? `<img src="${product.image}" alt="${product.name}" class="admin-product-thumb" />`
+        ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" class="admin-product-thumb" />`
         : "-";
 
       row.innerHTML = `
-        <td>${product.name}</td>
-        <td>${product.category}</td>
+        <td>${escapeHtml(product.name)}</td>
+        <td>${escapeHtml(product.category)}</td>
         <td>$${Number(product.price).toFixed(2)}</td>
         <td>${imagePreview}</td>
-        <td>${product.description}</td>
+        <td>${escapeHtml(product.description)}</td>
         <td>
           <div class="admin-action-buttons">
             <button
               type="button"
               class="edit-product-btn btn btn-secondary"
-              data-id="${product.id}"
-              data-name="${product.name}"
-              data-category="${product.category}"
-              data-price="${product.price}"
-              data-description="${product.description.replace(/"/g, "&quot;")}"
+              data-id="${escapeHtml(product.id)}"
+              data-name="${escapeHtml(product.name)}"
+              data-category="${escapeHtml(product.category)}"
+              data-price="${escapeHtml(product.price)}"
+              data-description="${escapeHtml(product.description)}"
             >
               Edit
             </button>
@@ -108,7 +120,7 @@ async function loadProducts() {
             <button
               type="button"
               class="remove-item-btn delete-product-btn"
-              data-id="${product.id}"
+              data-id="${escapeHtml(product.id)}"
             >
               Delete
             </button>
@@ -284,7 +296,7 @@ async function loadOrders() {
                 const lineTotal = Number(item.quantity) * Number(item.price);
                 return `
                   <div>
-                    ${item.product_name} — Qty: ${item.quantity} — $${lineTotal.toFixed(2)}
+                    ${escapeHtml(item.product_name)} — Qty: ${escapeHtml(item.quantity)} — $${lineTotal.toFixed(2)}
                   </div>
                 `;
               })
@@ -294,28 +306,28 @@ async function loadOrders() {
       const addressHtml =
         order.fulfillment_type === "delivery"
           ? `
-              <div>${order.delivery_street || ""}</div>
-              ${order.delivery_apt ? `<div>${order.delivery_apt}</div>` : ""}
+              <div>${escapeHtml(order.delivery_street || "")}</div>
+              ${order.delivery_apt ? `<div>${escapeHtml(order.delivery_apt)}</div>` : ""}
               <div>
-                ${order.delivery_city || ""}, ${order.delivery_state || ""} ${order.delivery_postal_code || ""}
+                ${escapeHtml(order.delivery_city || "")}, ${escapeHtml(order.delivery_state || "")} ${escapeHtml(order.delivery_postal_code || "")}
               </div>
             `
           : "-";
 
       row.innerHTML = `
-        <td>${order.customer_name}</td>
-        <td>${order.email}</td>
-        <td>${order.phone || "-"}</td>
-        <td>${order.pickup_date}</td>
-        <td>${order.fulfillment_type || "-"}</td>
+        <td>${escapeHtml(order.customer_name)}</td>
+        <td>${escapeHtml(order.email)}</td>
+        <td>${escapeHtml(order.phone || "-")}</td>
+        <td>${escapeHtml(order.pickup_date)}</td>
+        <td>${escapeHtml(order.fulfillment_type || "-")}</td>
         <td>${addressHtml}</td>
         <td>${itemsHtml}</td>
-        <td>${order.special_instructions || "-"}</td>
+        <td>${escapeHtml(order.special_instructions || "-")}</td>
         <td>
           <button
             type="button"
             class="remove-item-btn delete-order-btn"
-            data-id="${order.id}"
+            data-id="${escapeHtml(order.id)}"
           >
             Delete
           </button>
@@ -394,16 +406,16 @@ async function loadContacts() {
       const row = document.createElement("tr");
 
       row.innerHTML = `
-        <td>${contact.name}</td>
-        <td>${contact.email}</td>
-        <td>${contact.phone || "-"}</td>
-        <td>${contact.message}</td>
-        <td>${contact.created_at}</td>
+        <td>${escapeHtml(contact.name)}</td>
+        <td>${escapeHtml(contact.email)}</td>
+        <td>${escapeHtml(contact.phone || "-")}</td>
+        <td>${escapeHtml(contact.message)}</td>
+        <td>${escapeHtml(contact.created_at)}</td>
         <td>
           <button
             type="button"
             class="remove-item-btn delete-contact-btn"
-            data-id="${contact.id}"
+            data-id="${escapeHtml(contact.id)}"
           >
             Delete
           </button>

@@ -14,11 +14,22 @@ const orderLimiter=rateLimit({
   }
 })
 const contactLimiter=rateLimit({
-  windowMs:10*60*1000, //10 min 
+  windowMs:10*60*1000, //10 min
   max:5, //5 orders per ip
   message:{
     error:"Too many messages. Please wait before trying again. "
   }
+})
+
+// Stricter limiter for admin login to slow brute-force attempts
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 5,                   // 5 attempts per IP per window
+  message: {
+    error: "Too many login attempts. Please wait before trying again."
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 })
 
 if (!process.env.SESSION_SECRET) {
@@ -59,6 +70,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/orders",orderLimiter)
 app.use("/api/contacts",contactLimiter)
+app.use("/api/auth/login", loginLimiter)
 
 
 const sessionDbDir =
